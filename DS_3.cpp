@@ -1,5 +1,6 @@
 #include<iostream>
 #include<string>
+#include <fstream>
 
 using namespace std;
 struct Pos {
@@ -13,19 +14,36 @@ struct StackNode {
 };
 class Maze {
     private:
-        char** BuildMaze(int x, int y) {
-            char** maze = new char*[x];
+        char** maze;
+        int x;
+        int y;
+    public:
+        Maze (int x, int y) {
+            this -> x = x;
+            this -> y = y;
+            maze = new char*[x];
             for (int i = 0; i < x; i++) {
                 maze[i] = new char[y];
             }
-            return maze;
         }
-
-        void DeleteMaze(char** maze, int x) {
+        void DeleteMaze() {
             for (int i = 0; i < x; i++) {
                 delete[] maze[i];
             }
             delete[] maze;
+            maze = nullptr;
+        }
+        void SetMaze(char maze_word) {
+            maze[x][y] = maze_word;
+        }
+
+        void PrintMaze() {
+            for (int i = 0; i < x; i++) {
+                for (int j = 0; j < y; j++) {
+                    cout << maze[x][y];
+                }
+                cout << endl;
+            }
         }
 
 
@@ -43,9 +61,11 @@ class Stack {
             }
         }
         void pop() {
-            StackNode* del = top;
-            top = top -> next;
-            delete top;
+            if (!IsEmpty()) {
+                StackNode* del = top;
+                top = top -> next;
+                delete top;
+            }
         }
 
         void push() {
@@ -66,3 +86,24 @@ class Stack {
 
 
 };
+
+int main() {
+    int x;
+    int y;
+    char maze_dot;
+    ifstream infile("data.txt");
+    if (!infile) {
+        return 1;
+    }
+    infile >> x;
+    infile >> y;
+    Maze maze(x, y);
+    while (infile >> maze_dot) {
+        for (int i = 0; i < x; i++) {
+            for (int j = 0; j < y; j++) {
+                maze.SetMaze(maze_dot);
+            }
+        }
+    }
+
+}
