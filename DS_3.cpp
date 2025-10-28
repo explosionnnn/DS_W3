@@ -16,7 +16,7 @@ class Maze {
     private:
         char** maze;
         int x;
-        int y;
+
     public:
         Maze (int x, int y) {
             this -> x = x;
