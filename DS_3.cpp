@@ -31,7 +31,7 @@ class Maze {
         Maze(int x, int y) {
             this->x = x;
             this->y = y;
-            maze = new char*[y];            // y rows         
+            maze = new char*[y];            // y rows
             for (int i = 0; i < y; i++) {
                 maze[i] = new char[x];      // x columns
             }
@@ -258,11 +258,11 @@ class Mouse {
 }
 
     void Back() {
-        in_this_maze.SetMaze(pos.x, pos.y, 'V'); 
+        in_this_maze.SetMaze(pos.x, pos.y, 'V');
         if (!visited_route.IsEmpty()) {
-             visited_route.pop();
+            visited_route.pop();
             if (!visited_route.IsEmpty()) {
-                StackNode* top = visited_route.GetTop(); 
+                StackNode* top = visited_route.GetTop();
                 pos.x = top->pos.x;
                 pos.y = top->pos.y;
             }
@@ -285,6 +285,7 @@ class Mouse {
                 Walk(next);
                 if (Finish()) {
                     in_this_maze.PrintVisitedRoute();
+                    cout << endl;
                     in_this_maze.PrintReachRoute();
                     return;
                 }
@@ -322,7 +323,7 @@ class Mouse {
         }
         in_this_maze.PrintVisitedRoute();
         if (count == goal_number) {
-           in_this_maze.PrintReachRoute();
+            in_this_maze.PrintReachRoute();
         }
         in_this_maze.Reset(original_maze);
     }
@@ -392,7 +393,7 @@ class MissionGenerator {
     private:
         int mission_type;
         Maze maze123;
-        RecordMap stack123; 
+        RecordMap stack123;
     public:
         MissionGenerator() : maze123(0,0) {}
 
@@ -407,8 +408,8 @@ class MissionGenerator {
             if (new_maze.GetX() == 0 || new_maze.GetY() == 0) {
                 return;
             }
-            maze123 = new_maze; 
-            stack123.Clear();                
+            maze123 = new_maze;
+            stack123.Clear();
             Mouse mouse123(maze123, stack123);
             mouse123.FindGoal();
         }
@@ -484,4 +485,4 @@ int main() {
     generator.GenerateMissions();
     return 0;
 }
-    
+
