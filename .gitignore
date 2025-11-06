@@ -43,3 +43,6 @@
 *.txt
 
 .vscode/
+
+DS_3
+*.json

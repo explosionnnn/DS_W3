@@ -24,17 +24,23 @@ struct StackNode {
 
 class Maze {
     private:
-        char** maze;
+        char** maze; // 注意:maze[y][x] (先取寬(縱軸)再取長(橫軸))
         int x; //長
         int y; //寬
     public:
         Maze(int x, int y) {
             this->x = x;
             this->y = y;
-            maze = new char*[x];
-            for (int i = 0; i < x; i++) {
-                maze[i] = new char[y];
+            maze = new char*[y];            // y rows         
+            for (int i = 0; i < y; i++) {
+                maze[i] = new char[x];      // x columns
             }
+        }
+
+        Maze(const Maze& other) : Maze(other.x, other.y) { //Copy Constructor
+        for (int i = 0; i < y; i++)
+            for (int j = 0; j < x; j++)
+                maze[i][j] = other.maze[i][j];
         }
 
         ~Maze() {
@@ -42,7 +48,7 @@ class Maze {
         }
 
         void DeleteMaze() {
-            for (int i = 0; i < x; i++) {
+            for (int i = 0; i < y; i++) {
                 delete[] maze[i];
             }
             delete[] maze;
@@ -57,21 +63,23 @@ class Maze {
             return y;
         }
 
-        char GetBlock() {
-            return maze[x][y];
+        char GetBlock() { // 這個好像沒用到
+            return maze[y][x];
         }
 
         char GetBlock(int nx, int ny) {
-            return maze[nx][ny];
+            return maze[ny][nx];
         }
 
         void SetMaze(int pos_x, int pos_y, char maze_word) {
-            maze[pos_x][pos_y] = maze_word;
+            if (pos_x >= 0 && pos_x < x && pos_y >= 0 && pos_y < y) {
+                maze[pos_y][pos_x] = maze_word;
+            }
         }
 
         void PrintMaze() {
-            for (int i = 0; i < x; i++) {
-                for (int j = 0; j < y; j++) {
+            for (int i = 0; i < y; i++) {
+                for (int j = 0; j < x; j++) {
                     cout << maze[i][j];
                 }
                 cout << endl;
@@ -79,8 +87,8 @@ class Maze {
         }
 
         void PrintVisitedRoute() {
-            for (int i = 0; i < x; i++) {
-                for (int j = 0; j < y; j++) {
+            for (int i = 0; i < y; i++) {
+                for (int j = 0; j < x; j++) {
                     if (maze[i][j] == 'R') {  //R也算在visited route
                         cout << 'V';
                     } else {
@@ -92,8 +100,8 @@ class Maze {
         }
 
         void PrintReachRoute() {
-            for (int i = 0; i < x; i++) {
-                for (int j = 0; j < y; j++) {
+            for (int i = 0; i < y; i++) {
+                for (int j = 0; j < x; j++) {
                     if (maze[i][j] == 'V') {
                         cout << 'E';
                     } else {
@@ -104,10 +112,10 @@ class Maze {
             }
         }
 
-        void Clear(Maze original_maze) {
-            for (int i = 0; i < x; i++) {
-                for (int j = 0; j < y; j++) {
-                    maze[i][j] = original_maze.GetBlock(i, j);
+        void Reset(Maze &original_maze) {
+            for (int i = 0; i < y; i++) {
+                for (int j = 0; j < x; j++) {
+                    maze[i][j] = original_maze.GetBlock(j, i);
                 }
             }
         }
@@ -173,7 +181,11 @@ class RecordMap { // stack
             return 0;
         }
 
-
+        void Clear() {
+            while (!IsEmpty()) {
+                pop();
+            }
+        }
 
 };
 
@@ -181,9 +193,9 @@ class Mouse {
     private:
         Pos pos;
         Direction dir;
-        Maze &in_this_maze;        /*用reference避免Mouse被刪除時*/
-        Maze &original_maze; //每次task結束，還原
-        RecordMap &visited_route;  /*連帶刪除外部Maze和RecordMap指向的物件*/
+        Maze in_this_maze;        /*Maze已實作Copy Constructor，不用reference*/
+        Maze original_maze; //每次task結束，還原
+        RecordMap &visited_route;  /*用reference避免Mouse被刪除時連帶刪除外部RecordMap指向的物件*/
         bool finish = false;
         bool back = false;
     public:
@@ -197,18 +209,11 @@ class Mouse {
         }
     }
 
-    void Walk() {
-        if (dir == RIGHT) {
-            pos.x++;
-        } else if (dir == DOWN) {
-            pos.y++;
-        } else if (dir == LEFT) {
-            pos.x--;
-        } else if (dir == UP) {
-            pos.y--;
-        }
+    void Walk(const Pos& next_pos) {
+        pos = next_pos;
         visited_route.push(pos.x, pos.y);
-        in_this_maze.SetMaze(pos.x, pos.y, 'R');  //走到就設為R
+        if (in_this_maze.GetBlock(pos.x, pos.y) != 'G') // 保護 G
+            in_this_maze.SetMaze(pos.x, pos.y, 'R');  //走到就設為R
     }
 
     bool CanWalkTo(int nx, int ny) {
@@ -226,7 +231,7 @@ class Mouse {
 
     }
 
-    bool Step() {
+    bool Step(Pos& next_pos) {
     // 試四個方向
     for (int i = 0; i < 4; ++i) {
         int nx = pos.x;
@@ -240,6 +245,7 @@ class Mouse {
 
         // 可以走就走
         if (CanWalkTo(nx, ny)) {
+            next_pos = {nx, ny};
             return true;    // 這一步成功
         }
 
@@ -247,40 +253,47 @@ class Mouse {
         ChangeDir();
     }
 
-    // 四個方向都不能走 → 死路 → 回去
-    Back();
+    // 四個方向都不能走
     return false;
 }
 
     void Back() {
-        in_this_maze.SetMaze(pos.x, pos.y, 'V');  // 退回來變成V
-        StackNode* top = visited_route.GetTop();  // 退到堆疊的top
-        pos.x = top -> pos.x;
-        pos.y = top -> pos.y;
-        ChangeDir();
-        visited_route.pop();
+        in_this_maze.SetMaze(pos.x, pos.y, 'V'); 
+        if (!visited_route.IsEmpty()) {
+             visited_route.pop();
+            if (!visited_route.IsEmpty()) {
+                StackNode* top = visited_route.GetTop(); 
+                pos.x = top->pos.x;
+                pos.y = top->pos.y;
+            }
+            ChangeDir();
+        }
     }
 
     bool Finish() {
         return (in_this_maze.GetBlock(pos.x, pos.y) == 'G');
     }
 
-    void FindGoal() { //T1
-        bool try_step;
+    void FindGoal() { //T1 and T4
         visited_route.push(pos.x, pos.y);
+        if (in_this_maze.GetBlock(pos.x, pos.y) == 'E') {
+            in_this_maze.SetMaze(pos.x, pos.y, 'R');
+        }
         while (!visited_route.IsEmpty()) {
-            try_step = Step();
-            if (try_step) {
-                Walk();
+            Pos next;
+            if (Step(next)) {
+                Walk(next);
                 if (Finish()) {
-                    in_this_maze.SetMaze(visited_route.GetTopX(), visited_route.GetTopY(), 'G');
-                    //目標設回G
-                    in_this_maze.PrintMaze();
-                    break;
+                    in_this_maze.PrintVisitedRoute();
+                    in_this_maze.PrintReachRoute();
+                    return;
                 }
+            } else {
+                Back();
             }
         }
-        in_this_maze.Clear(original_maze);
+        in_this_maze.PrintVisitedRoute();
+        in_this_maze.Reset(original_maze);
     }
 
     void PutGoal(StackNode* goal) {
@@ -290,50 +303,185 @@ class Mouse {
         }
     }
 
+    void FindGoalRequired(int goal_number) { //T2
+        int count = 0;
+        visited_route.push(pos.x, pos.y);
+        if (in_this_maze.GetBlock(pos.x, pos.y) == 'E') {
+            in_this_maze.SetMaze(pos.x, pos.y, 'R');
+        }
+        while (!visited_route.IsEmpty() && count < goal_number) {
+            Pos next;
+            if (Step(next)) {
+                Walk(next);
+                if (Finish()) {
+                    count++;
+                }
+            } else {
+                Back();
+            }
+        }
+        in_this_maze.PrintVisitedRoute();
+        if (count == goal_number) {
+           in_this_maze.PrintReachRoute();
+        }
+        in_this_maze.Reset(original_maze);
+    }
+
     void FindAllGoal() { //T3
-        int count_goal = 0;
-        bool try_step = false;
-        RecordMap goal;
+        int count = 0;
+        visited_route.push(pos.x, pos.y);
+        if (in_this_maze.GetBlock(pos.x, pos.y) == 'E') {
+            in_this_maze.SetMaze(pos.x, pos.y, 'R');
+        }
         while (!visited_route.IsEmpty()) {
-            try_step = Step();
-            if (try_step) {
-                Walk();
-                if (Finish()) { //找到goal
-                    count_goal++;
-                    goal.push(pos.x, pos.y);
+            Pos next;
+            if (Step(next)) {
+                Walk(next);
+                if (Finish()) count++;
+            } else {
+                Back();
+            }
+        }
+        in_this_maze.PrintVisitedRoute();
+        cout << "The maze has " << count << " goal(s) in total" << endl;
+        in_this_maze.Reset(original_maze);
+    }
+
+    void SetMaze(Maze& maze) {
+        in_this_maze.Reset(maze);
+        original_maze.Reset(maze);
+    }
+
+};
+
+class ReadFileParser {
+    private:
+        int x;
+        int y;
+        char maze_dot;
+    public:
+        ReadFileParser() {}
+
+        ~ReadFileParser() {}
+
+        Maze ReadMaze(const char* filename) {
+            ifstream infile("input" + string(filename) + ".txt");
+            if (!infile) {
+                cout << "input" << filename << ".txt does not exist!" << endl;
+                return Maze(0, 0);
+            }
+            infile >> x;
+            infile >> y;
+            if (x <= 0 || y <= 0) {
+                cout << "Invalid maze size!" << endl;
+                return Maze(0, 0);
+            }
+            Maze maze(x, y);
+            string line;
+            for (int i = 0; i < y; i++) {          // y 行
+                infile >> line;
+                for (int j = 0; j < x; j++) {      // x 列
+                    maze.SetMaze(j, i, line[j]);
+                }
+            }
+            return maze;
+        }
+};
+
+class MissionGenerator {
+    private:
+        int mission_type;
+        Maze maze123;
+        RecordMap stack123; 
+    public:
+        MissionGenerator() : maze123(0,0) {}
+
+        ~MissionGenerator() {}
+
+        void Mission1() {
+            cout << "Input a file number: ";
+            string filename;
+            cin >> filename;
+            ReadFileParser parser;
+            Maze new_maze = parser.ReadMaze(filename.c_str());
+            if (new_maze.GetX() == 0 || new_maze.GetY() == 0) {
+                return;
+            }
+            maze123 = new_maze; 
+            stack123.Clear();                
+            Mouse mouse123(maze123, stack123);
+            mouse123.FindGoal();
+        }
+
+        void Mission2() {
+            if (maze123.GetX() == 0 || maze123.GetY() == 0) {
+                cout << "### Execute command 1 to load a maze! ###" << endl;
+                return;
+            }
+            stack123.Clear();
+            Mouse mouse123(maze123, stack123);
+            int goal_number;
+            cout << "Number of G (goals): ";
+            cin >> goal_number;
+            mouse123.FindGoalRequired(goal_number);
+        }
+
+        void Mission3() {
+            if (maze123.GetX() == 0 || maze123.GetY() == 0) {
+                cout << "### Execute command 1 to load a maze! ###" << endl;
+                return;
+            }
+            stack123.Clear();
+            Mouse mouse123(maze123, stack123);
+            mouse123.FindAllGoal();
+        }
+
+        void Mission4() {
+            cout << "Input a file number: ";
+            string filename;
+            cin >> filename;
+            ReadFileParser parser;
+            Maze maze4 = parser.ReadMaze(filename.c_str());
+            if (maze4.GetX() == 0 || maze4.GetY() == 0) {
+                return;
+            }
+            RecordMap stack4;
+            Mouse mouse(maze4, stack4);
+            mouse.FindGoal();
+        }
+
+        void GenerateMissions() {
+            while (true) {
+                cout << "*** (^_^) Data Structure (^o^) ***" << endl;
+                cout << "*** Find the Goal(s) in a Maze ***" << endl;
+                cout << "* 0. Quit                        *" << endl;
+                cout << "* 1. Find one goal               *" << endl;
+                cout << "* 2. Find goal(s) as requested   *" << endl;
+                cout << "* 3. How many goals?             *" << endl;
+                cout << "* 4. Shortest path to one goal   *" << endl;
+                cout << "**********************************" << endl;
+                cout << "Input a command(0, 1, 2, 3, 4): ";
+                cin >> mission_type;
+                if (mission_type == 1) {
+                    Mission1();
+                } else if (mission_type == 2) {
+                    Mission2();
+                } else if (mission_type == 3) {
+                    Mission3();
+                } else if (mission_type == 4) {
+                    Mission4();
+                } else if (mission_type == 0) {
+                    return;
+                } else {
+                    cout << "Command does not exist!" << endl;
                 }
             }
         }
-        PutGoal(goal.GetTop()); //確保goal的座標是goal
-        in_this_maze.PrintVisitedRoute();
-        cout << "The maze has " << count_goal << "goal(s) int the total" << endl;
-        in_this_maze.Clear(original_maze);
-    }
-
-    
 };
 
 int main() {
-    int x;
-    int y;
-    char maze_dot;
-    ifstream infile("data.txt");
-    if (!infile) {
-        cout << "Unable to open file data.txt";
-        return 1;
-    }
-    infile >> x;
-    infile >> y;
-    if (x <= 0 || y <= 0) {
-        return 1;
-    }
-    Maze maze(x, y);
-    while (infile >> maze_dot) {
-        for (int i = 0; i < x; i++) {
-            for (int j = 0; j < y; j++) {
-                maze.SetMaze(i, j, maze_dot);
-            }
-        }
-    }
-
+    MissionGenerator generator;
+    generator.GenerateMissions();
+    return 0;
 }
+    
