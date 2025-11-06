@@ -222,6 +222,14 @@ class Mouse {
         }
     }
 
+    void AllReset() {
+        in_this_maze.Reset(original_maze);
+        pos.x = 0;
+        pos.y = 0;
+        dir = RIGHT;
+        visited_route.Clear();
+    }
+
     void Walk(const Pos& next_pos) {
         pos = next_pos;
         visited_route.push(pos.x, pos.y);
@@ -300,11 +308,7 @@ class Mouse {
                     in_this_maze.PrintVisitedRoute();
                     cout << endl;
                     in_this_maze.PrintReachRoute();
-                    in_this_maze.Reset(original_maze);
-                    pos.x = 0;
-                    pos.y = 0;
-                    dir = RIGHT;
-                    visited_route.Clear();
+                    AllReset();
                     return;
                 }
             } else {
@@ -312,7 +316,7 @@ class Mouse {
             }
         }
         in_this_maze.PrintVisitedRoute();
-        in_this_maze.Reset(original_maze);
+        AllReset();
     }
 
     void PutGoal(StackNode* goal) {
@@ -343,7 +347,7 @@ class Mouse {
         if (count == goal_number) {
             in_this_maze.PrintReachRoute();
         }
-        in_this_maze.Reset(original_maze);
+        AllReset();
     }
 
     void FindAllGoal() { //T3
@@ -370,7 +374,7 @@ class Mouse {
         PutGoal(goal.GetTop());
         in_this_maze.PrintVisitedRoute();
         cout << "The maze has " << count << " goal(s) in total" << endl;
-        in_this_maze.Reset(original_maze);
+        AllReset();
     }
 
     void SetMaze(Maze& maze) {
