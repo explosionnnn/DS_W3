@@ -22,7 +22,8 @@ struct StackNode {
     StackNode* next;
 };
 
-class Maze {    
+
+class Maze {
     private:
         char** maze;
         int x; //長
@@ -78,6 +79,35 @@ class Maze {
             }
         }
 
+        void PrintVisitedRoute() {
+            for (int i = 0; i < x; i++) {
+                for (int j = 0; j < y; j++) {
+                    if (maze[i][j] == 'R') {  //R也算在visited route
+                        cout << 'V';
+                    } else {
+                        cout << maze[i][j];
+                    }
+                }
+                cout << endl;
+            }
+        }
+
+        void PrintReachRoute() {
+            for (int i = 0; i < x; i++) {
+                for (int j = 0; j < y; j++) {
+                    if (maze[i][j] == 'V') {
+                        cout << 'E';
+                    } else {
+                        cout << maze[i][j];
+                    }
+                }
+                cout << endl;
+            }
+        }
+
+
+
+
 
 };
 
@@ -94,7 +124,7 @@ class RecordMap { // stack
                 pop();
             }
         }
-        
+
         void pop() {
             if (!IsEmpty()) {
                 StackNode* del = top;
@@ -114,6 +144,14 @@ class RecordMap { // stack
         bool IsEmpty() {
             return (top == nullptr);
         }
+
+        void GetTop(Pos &pos) {
+            if (!IsEmpty()) {
+                pos.x = top -> pos.x;
+                pos.y = top -> pos.y;
+            }
+        }
+
 
 
 };
@@ -148,6 +186,7 @@ class Mouse {
             pos.y--;
         }
         visited_route.push(pos.x, pos.y);
+        in_this_maze.SetMaze(pos.x, pos.y, 'R');  //走到就設為R
     }
 
     bool CanWalkTo(int nx, int ny) {
@@ -158,7 +197,7 @@ class Mouse {
             return false;
         }
         char block = in_this_maze.GetBlock(nx, ny);
-        if (block == 'O' || block == 'V') {
+        if (block == 'O' || block == 'V' || block == 'R') {  // 這三個都不能走
             return false;
         }
         return true;
@@ -192,16 +231,8 @@ class Mouse {
 }
 
     void Back() {
-        in_this_maze.SetMaze(pos.x, pos.y, 'V');
-        if (dir == RIGHT) {
-            pos.x--;
-        } else if (dir == DOWN) {
-            pos.y--;
-        } else if (dir == LEFT) {
-            pos.x++;
-        } else if (dir == UP) {
-            pos.y++;
-        }
+        in_this_maze.SetMaze(pos.x, pos.y, 'V');  // 退回來變成V
+        visited_route.GetTop(pos);  // 退到堆疊的top
         ChangeDir();
         visited_route.pop();
     }
@@ -217,10 +248,10 @@ class Mouse {
             try_step = Step();
             if (try_step) {
                 Walk();
-            }
-            if (Finish()) {
-                in_this_maze.PrintMaze();
-                break;
+                if (Finish()) {
+                    in_this_maze.PrintMaze();
+                    break;
+                }
             }
         }
     }
