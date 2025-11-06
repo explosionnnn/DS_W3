@@ -22,6 +22,7 @@ struct StackNode {
     StackNode* next;
 };
 
+
 class Maze {
     private:
         char** maze;
@@ -150,6 +151,7 @@ class RecordMap { // stack
                 pos.y = top -> pos.y;
             }
         }
+
 
 
 };
