@@ -78,6 +78,32 @@ class Maze {
             }
         }
 
+        void PrintVisitedRoute() {
+            for (int i = 0; i < x; i++) {
+                for (int j = 0; j < y; j++) {
+                    if (maze[i][j] == 'R') {  //R也算在visited route
+                        cout << 'V';
+                    } else {
+                        cout << maze[i][j];
+                    }
+                }
+                cout << endl;
+            }
+        }
+
+        void PrintReachRoute() {
+            for (int i = 0; i < x; i++) {
+                for (int j = 0; j < y; j++) {
+                    if (maze[i][j] == 'V') {
+                        cout << 'E';
+                    } else {
+                        cout << maze[i][j];
+                    }
+                }
+                cout << endl;
+            }
+        }
+
 
 
 
