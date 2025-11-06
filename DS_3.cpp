@@ -187,6 +187,13 @@ class RecordMap { // stack
             }
         }
 
+        void AppendOtherFromTop(RecordMap &other) {
+            StackNode* node = other.GetTop();
+            while (node != nullptr) {
+                push(node->pos.x, node->pos.y);
+                node = node->next;
+            }
+        }       
 };
 
 class Mouse {
@@ -258,7 +265,9 @@ class Mouse {
 }
 
     void Back() {
-        in_this_maze.SetMaze(pos.x, pos.y, 'V');
+        if (in_this_maze.GetBlock(pos.x, pos.y) != 'G') {
+            in_this_maze.SetMaze(pos.x, pos.y, 'V');
+        }
         if (!visited_route.IsEmpty()) {
             visited_route.pop();
             if (!visited_route.IsEmpty()) {
@@ -316,15 +325,21 @@ class Mouse {
                 Walk(next);
                 if (Finish()) {
                     count++;
+                    if (count == goal_number) {
+                        MarkStackAsRoute();
+                        in_this_maze.PrintVisitedRoute();
+                        cout << endl;
+                        in_this_maze.PrintReachRoute();
+                        in_this_maze.Reset(original_maze);
+                        return;
+                    }
                 }
             } else {
                 Back();
             }
         }
         in_this_maze.PrintVisitedRoute();
-        if (count == goal_number) {
-            in_this_maze.PrintReachRoute();
-        }
+
         in_this_maze.Reset(original_maze);
     }
 
@@ -353,6 +368,15 @@ class Mouse {
         original_maze.Reset(maze);
     }
 
+    void MarkStackAsRoute() {
+    StackNode* node = visited_route.GetTop();
+    while (node != nullptr) {
+        if (in_this_maze.GetBlock(node->pos.x, node->pos.y) != 'G') {
+            in_this_maze.SetMaze(node->pos.x, node->pos.y, 'R');
+        }
+        node = node->next;
+    }
+}
 };
 
 class ReadFileParser {
@@ -368,7 +392,7 @@ class ReadFileParser {
         Maze ReadMaze(const char* filename) {
             ifstream infile("input" + string(filename) + ".txt");
             if (!infile) {
-                cout << "input" << filename << ".txt does not exist!" << endl;
+                cout << endl << "input" << filename << ".txt does not exist!" << endl << endl;
                 return Maze(0, 0);
             }
             infile >> x;
@@ -400,6 +424,7 @@ class MissionGenerator {
         ~MissionGenerator() {}
 
         void Mission1() {
+            cout << endl;
             cout << "Input a file number: ";
             string filename;
             cin >> filename;
@@ -412,9 +437,11 @@ class MissionGenerator {
             stack123.Clear();
             Mouse mouse123(maze123, stack123);
             mouse123.FindGoal();
+            cout << endl << endl;
         }
 
         void Mission2() {
+            cout << endl;
             if (maze123.GetX() == 0 || maze123.GetY() == 0) {
                 cout << "### Execute command 1 to load a maze! ###" << endl;
                 return;
@@ -422,12 +449,19 @@ class MissionGenerator {
             stack123.Clear();
             Mouse mouse123(maze123, stack123);
             int goal_number;
-            cout << "Number of G (goals): ";
-            cin >> goal_number;
+            while (true) {
+                cout << "Number of G (goals): ";
+                if (cin >> goal_number) {
+                    break;
+                }
+                cout << endl;
+            }
             mouse123.FindGoalRequired(goal_number);
+            cout << endl << endl;
         }
 
         void Mission3() {
+            cout << endl;
             if (maze123.GetX() == 0 || maze123.GetY() == 0) {
                 cout << "### Execute command 1 to load a maze! ###" << endl;
                 return;
@@ -435,9 +469,11 @@ class MissionGenerator {
             stack123.Clear();
             Mouse mouse123(maze123, stack123);
             mouse123.FindAllGoal();
+            cout << endl << endl;
         }
 
         void Mission4() {
+            cout << endl;
             cout << "Input a file number: ";
             string filename;
             cin >> filename;
@@ -449,6 +485,7 @@ class MissionGenerator {
             RecordMap stack4;
             Mouse mouse(maze4, stack4);
             mouse.FindGoal();
+            cout << endl << endl;
         }
 
         void GenerateMissions() {
