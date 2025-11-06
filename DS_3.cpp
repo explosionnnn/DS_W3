@@ -22,7 +22,6 @@ struct StackNode {
     StackNode* next;
 };
 
-
 class Maze {
     private:
         char** maze;
@@ -166,6 +165,7 @@ class RecordMap { // stack
             }
             return 0;
         }
+
         int GetTopY() {
             if (!IsEmpty()) {
                 return top -> pos.y;
@@ -310,8 +310,7 @@ class Mouse {
         in_this_maze.Clear(original_maze);
     }
 
-
-
+    
 };
 
 int main() {
@@ -320,6 +319,7 @@ int main() {
     char maze_dot;
     ifstream infile("data.txt");
     if (!infile) {
+        cout << "Unable to open file data.txt";
         return 1;
     }
     infile >> x;
