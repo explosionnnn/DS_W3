@@ -105,6 +105,14 @@ class Maze {
             }
         }
 
+        void Clear(Maze original_maze) {
+            for (int i = 0; i < x; i++) {
+                for (int j = 0; j < y; j++) {
+                    maze[i][j] = original_maze.GetBlock(i, j);
+                }
+            }
+        }
+
 
 
 
@@ -145,11 +153,24 @@ class RecordMap { // stack
             return (top == nullptr);
         }
 
-        void GetTop(Pos &pos) {
+        StackNode* GetTop() {
             if (!IsEmpty()) {
-                pos.x = top -> pos.x;
-                pos.y = top -> pos.y;
+                return top;
             }
+            return nullptr;
+        }
+
+        int GetTopX() {
+            if (!IsEmpty()) {
+                return top -> pos.x;
+            }
+            return 0;
+        }
+        int GetTopY() {
+            if (!IsEmpty()) {
+                return top -> pos.y;
+            }
+            return 0;
         }
 
 
@@ -161,12 +182,13 @@ class Mouse {
         Pos pos;
         Direction dir;
         Maze &in_this_maze;        /*用reference避免Mouse被刪除時*/
+        Maze &original_maze; //每次task結束，還原
         RecordMap &visited_route;  /*連帶刪除外部Maze和RecordMap指向的物件*/
         bool finish = false;
         bool back = false;
     public:
     Mouse(Maze& maze, RecordMap& map)
-        : pos{0, 0}, dir(RIGHT), in_this_maze(maze), visited_route(map) {}
+        : pos{0, 0}, dir(RIGHT), in_this_maze(maze), original_maze(maze), visited_route(map) {}
 
     void ChangeDir() {
         dir = static_cast<Direction>(dir + 1);
@@ -232,7 +254,9 @@ class Mouse {
 
     void Back() {
         in_this_maze.SetMaze(pos.x, pos.y, 'V');  // 退回來變成V
-        visited_route.GetTop(pos);  // 退到堆疊的top
+        StackNode* top = visited_route.GetTop();  // 退到堆疊的top
+        pos.x = top -> pos.x;
+        pos.y = top -> pos.y;
         ChangeDir();
         visited_route.pop();
     }
@@ -249,11 +273,41 @@ class Mouse {
             if (try_step) {
                 Walk();
                 if (Finish()) {
+                    in_this_maze.SetMaze(visited_route.GetTopX(), visited_route.GetTopY(), 'G');
+                    //目標設回G
                     in_this_maze.PrintMaze();
                     break;
                 }
             }
         }
+        in_this_maze.Clear(original_maze);
+    }
+
+    void PutGoal(StackNode* goal) {
+        while (goal != nullptr) {
+            in_this_maze.SetMaze(goal->pos.x, goal->pos.y, 'G');
+            goal = goal -> next;
+        }
+    }
+
+    void FindAllGoal() { //T3
+        int count_goal = 0;
+        bool try_step = false;
+        RecordMap goal;
+        while (!visited_route.IsEmpty()) {
+            try_step = Step();
+            if (try_step) {
+                Walk();
+                if (Finish()) { //找到goal
+                    count_goal++;
+                    goal.push(pos.x, pos.y);
+                }
+            }
+        }
+        PutGoal(goal.GetTop()); //確保goal的座標是goal
+        in_this_maze.PrintVisitedRoute();
+        cout << "The maze has " << count_goal << "goal(s) int the total" << endl;
+        in_this_maze.Clear(original_maze);
     }
 
 
