@@ -424,7 +424,7 @@ class ReadFileParser {
             ifstream infile("input" + string(filename) + ".txt");
             if (!infile) {
                 cout << "input" << filename << ".txt does not exist!" << endl;
-                return Maze(0, 0);
+                return maze123.SetMazeXY(0, 0);
             }
             infile >> x;
             infile >> y;
