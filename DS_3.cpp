@@ -137,7 +137,6 @@ class Maze {
 
 
 
-
 };
 
 class RecordMap { // stack
@@ -351,14 +350,18 @@ class Mouse {
         if (in_this_maze.GetBlock(pos.x, pos.y) == 'E') {
             in_this_maze.SetMaze(pos.x, pos.y, 'R');
         }
+        RecordMap goal;
         while (!visited_route.IsEmpty() && count < goal_number) {
             Pos next;
             if (Step(next)) {
                 Walk(next);
                 if (Finish()) {
+                    in_this_maze.SetMaze(pos.x, pos.y, 'R'); //標記已找到的goal為R，避免重複計數
+                    goal.push(pos.x, pos.y);
                     count++;
                     if (count == goal_number) {
                         MarkStackAsRoute();
+                        PutGoal(goal.GetTop());
                         in_this_maze.PrintVisitedRoute();
                         cout << endl;
                         in_this_maze.PrintReachRoute();
@@ -370,10 +373,8 @@ class Mouse {
                 Back();
             }
         }
+        PutGoal(goal.GetTop());
         in_this_maze.PrintVisitedRoute();
-        if (count == goal_number) {
-            in_this_maze.PrintReachRoute();
-        }
         in_this_maze.Reset(original_maze);
     }
 
