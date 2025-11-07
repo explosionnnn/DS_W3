@@ -403,7 +403,6 @@ class ReadFileParser {
             }
             infile >> x;
             infile >> y;
-            cout << x << y << endl;
             if (x <= 0 || y <= 0) {
                 cout << "Invalid maze size!" << endl;
                 maze123.SetMazeXY(0,0);
@@ -422,7 +421,7 @@ class ReadFileParser {
 
 class MissionGenerator {
     private:
-        int mission_type;
+        string mission_type;
         Maze maze123;
         RecordMap stack123;
     public:
@@ -493,15 +492,15 @@ class MissionGenerator {
                 cout << "**********************************" << endl;
                 cout << "Input a command(0, 1, 2, 3, 4): ";
                 cin >> mission_type;
-                if (mission_type == 1) {
+                if (mission_type == "1") {
                     Mission1();
-                } else if (mission_type == 2) {
+                } else if (mission_type == "2") {
                     Mission2();
-                } else if (mission_type == 3) {
+                } else if (mission_type == "3") {
                     Mission3();
-                } else if (mission_type == 4) {
+                } else if (mission_type == "4") {
                     Mission4();
-                } else if (mission_type == 0) {
+                } else if (mission_type == "5") {
                     return;
                 } else {
                     cout << "Command does not exist!" << endl;
