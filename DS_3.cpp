@@ -318,7 +318,7 @@ class Mouse {
 
 
 
-    bool Step(Pos& next_pos, RecordMap &wall) {
+    bool Step(Pos& next_pos, int step_arr[][100], int step) {
     // 試四個方向
     for (int i = 0; i < 4; ++i) {
         int nx = pos.x;
@@ -331,7 +331,7 @@ class Mouse {
         else if (dir == UP)    ny--;
 
         // 可以走就走
-        if (CanWalkTo(nx, ny) && !wall.Contain(nx, ny)) {
+        if (CanWalkTo(nx, ny) && step < step_arr[nx][ny]) {
             next_pos = {nx, ny};
             return true;    // 這一步成功
         }
@@ -468,40 +468,44 @@ class Mouse {
         int step = 1;
         int shortest_path = 10000;
         RecordMap shortest_route; // 記目前最短的路
-        RecordMap wall;
+        int step_arr[100][100];
+        for (int y = 0; y < 100; y++) {
+            for (int x = 0; x < 100; x++) {
+                step_arr[y][x] = 10000;
+            }
+        }
+        step_arr[pos.y][pos.x] = 1;
         visited_route.push(pos.x, pos.y);
         in_this_maze.SetMaze(pos.x, pos.y, 'R');
         while (!visited_route.IsEmpty()) {
             Pos next;
-            if (Step(next, wall) && (step+1 < shortest_path || shortest_route.IsEmpty())) {
+            if (Step(next) && (step+1 < shortest_path) && (step + 1 < step_arr[next.y][next.x])) {
+                cout << endl;
+                in_this_maze.PrintReachRoute();
                 Walk(next);
                 step++;
+                step_arr[pos.y][pos.x] = step;
                 if (Finish()) {
                     shortest_path = step;
                     shortest_route.Copy(visited_route);
                 }
             } else {
-                wall.pop();
-                wall.push(pos.x, pos.y);
                 Back();
                 step--;
-                if (in_this_maze.GetBlock(pos.x, pos.y) != 'G') {
+                if (!(pos.x == 0 && pos.y == 0) && in_this_maze.GetBlock(pos.x, pos.y) != 'G') {
                     in_this_maze.SetMaze(pos.x, pos.y, 'E');
                 }
             }
-            cout << step << next.x << next.y << endl;
-            cout << endl;
-            in_this_maze.PrintReachRoute();
         }
         if (shortest_route.IsEmpty()) {
             cout << step <<endl;
             cout << endl << endl << "### There is no path to find a goal! ###";
             return;
         }
+        cout << step_arr[1][1] << endl;
         PutR(shortest_route);
         in_this_maze.PrintVisitedRoute();
         cout << endl;
-
         in_this_maze.PrintReachRoute();
         AllReset();
     }
