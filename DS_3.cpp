@@ -346,6 +346,20 @@ class Mouse {
 
 
     void Back() {
+        if (in_this_maze.GetBlock(pos.x, pos.y) != 'G') // 保護 G
+            in_this_maze.SetMaze(pos.x, pos.y, 'V');  //走到就設為R
+        if (!visited_route.IsEmpty()) {
+            visited_route.pop();
+            if (!visited_route.IsEmpty()) {
+                StackNode* top = visited_route.GetTop();
+                pos.x = top->pos.x;
+                pos.y = top->pos.y;
+            }
+            ChangeDir();
+        }
+    }
+
+        void Back_f() {
         if (!visited_route.IsEmpty()) {
             visited_route.pop();
             if (!visited_route.IsEmpty()) {
@@ -395,6 +409,7 @@ class Mouse {
     }
 
     void PutR(RecordMap &shortest_route) {
+        cout << "aaaaaaa" << endl;
         StackNode *cu = shortest_route.GetTop();
         while (cu != nullptr) {
             in_this_maze.SetMaze(cu -> pos.x, cu -> pos.y, 'R');
@@ -485,9 +500,11 @@ class Mouse {
                     shortest_route.Copy(visited_route);
                 }
             } else {
-                Back();
+                if (in_this_maze.GetBlock(pos.x, pos.y) != 'G') {
+                    in_this_maze.SetMaze(pos.x, pos.y, 'E');  // 先還原這一格
+                }
+                Back_f();
                 step--;
-                in_this_maze.SetMaze(pos.x, pos.y, 'E');
             }
         cout << "here: " << pos.x << "," << pos.y
         << " step_arr=" << step_arr[pos.y][pos.x] << endl;
@@ -498,6 +515,7 @@ class Mouse {
             return;
         }
         PutR(shortest_route);
+        cout << "The length is " << shortest_path << " block" << endl;
         in_this_maze.PrintVisitedRoute();
         cout << endl;
         in_this_maze.PrintReachRoute();
