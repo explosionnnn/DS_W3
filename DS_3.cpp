@@ -331,7 +331,7 @@ class Mouse {
         else if (dir == UP)    ny--;
 
         // 可以走就走
-        if (CanWalkTo(nx, ny) && step < step_arr[nx][ny]) {
+        if (CanWalkTo(nx, ny) && step < step_arr[ny][nx]) {
             next_pos = {nx, ny};
             return true;    // 這一步成功
         }
@@ -346,9 +346,6 @@ class Mouse {
 
 
     void Back() {
-        if (in_this_maze.GetBlock(pos.x, pos.y) != 'G') {
-            in_this_maze.SetMaze(pos.x, pos.y, 'V');
-        }
         if (!visited_route.IsEmpty()) {
             visited_route.pop();
             if (!visited_route.IsEmpty()) {
@@ -359,6 +356,7 @@ class Mouse {
             ChangeDir();
         }
     }
+
 
     bool Finish() {
         return (in_this_maze.GetBlock(pos.x, pos.y) == 'G');
@@ -476,12 +474,9 @@ class Mouse {
         }
         step_arr[pos.y][pos.x] = 1;
         visited_route.push(pos.x, pos.y);
-        in_this_maze.SetMaze(pos.x, pos.y, 'R');
         while (!visited_route.IsEmpty()) {
             Pos next;
             if (Step(next) && (step+1 < shortest_path) && (step + 1 < step_arr[next.y][next.x])) {
-                cout << endl;
-                in_this_maze.PrintReachRoute();
                 Walk(next);
                 step++;
                 step_arr[pos.y][pos.x] = step;
@@ -492,17 +487,16 @@ class Mouse {
             } else {
                 Back();
                 step--;
-                if (!(pos.x == 0 && pos.y == 0) && in_this_maze.GetBlock(pos.x, pos.y) != 'G') {
-                    in_this_maze.SetMaze(pos.x, pos.y, 'E');
-                }
+                in_this_maze.SetMaze(pos.x, pos.y, 'E');
             }
+        cout << "here: " << pos.x << "," << pos.y
+        << " step_arr=" << step_arr[pos.y][pos.x] << endl;
         }
         if (shortest_route.IsEmpty()) {
             cout << step <<endl;
             cout << endl << endl << "### There is no path to find a goal! ###";
             return;
         }
-        cout << step_arr[1][1] << endl;
         PutR(shortest_route);
         in_this_maze.PrintVisitedRoute();
         cout << endl;
