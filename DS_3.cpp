@@ -217,6 +217,28 @@ class RecordMap { // stack
             }
             return length;
         }
+
+        void Copy(RecordMap &v_route) {
+            if (!IsEmpty()) {
+                Clear();
+            }
+            StackNode *cu = v_route.GetTop();
+            while (cu != nullptr) {
+                push(cu -> pos.x, cu -> pos.y);
+                cu = cu -> next;
+            }
+        }
+
+        bool Contain(int x, int y) {
+            StackNode *cu = GetTop();
+            while (cu != nullptr) {
+                if (x == cu -> pos.x && y == cu -> pos.y) {
+                    return true;
+                }
+                cu = cu -> next;
+            }
+            return false;
+        }
 };
 
 class Mouse {
@@ -294,6 +316,35 @@ class Mouse {
     return false;
 }
 
+
+
+    bool Step(Pos& next_pos, RecordMap &wall) {
+    // 試四個方向
+    for (int i = 0; i < 4; ++i) {
+        int nx = pos.x;
+        int ny = pos.y;
+
+        // 依目前 dir 算下一格
+        if (dir == RIGHT)      nx++;
+        else if (dir == DOWN)  ny++;
+        else if (dir == LEFT)  nx--;
+        else if (dir == UP)    ny--;
+
+        // 可以走就走
+        if (CanWalkTo(nx, ny) && !wall.Contain(nx, ny)) {
+            next_pos = {nx, ny};
+            return true;    // 這一步成功
+        }
+
+        // 不行走就換方向再試
+        ChangeDir();
+    }
+
+    // 四個方向都不能走
+    return false;
+}
+
+
     void Back() {
         if (in_this_maze.GetBlock(pos.x, pos.y) != 'G') {
             in_this_maze.SetMaze(pos.x, pos.y, 'V');
@@ -338,9 +389,18 @@ class Mouse {
     }
 
     void PutGoal(StackNode* goal) {
-        while (goal != nullptr) {
-            in_this_maze.SetMaze(goal->pos.x, goal->pos.y, 'G');
-            goal = goal -> next;
+        StackNode *cu = goal;
+        while (cu != nullptr) {
+            in_this_maze.SetMaze(cu->pos.x, cu->pos.y, 'G');
+            cu = cu -> next;
+        }
+    }
+
+    void PutR(RecordMap &shortest_route) {
+        StackNode *cu = shortest_route.GetTop();
+        while (cu != nullptr) {
+            in_this_maze.SetMaze(cu -> pos.x, cu -> pos.y, 'R');
+            cu = cu -> next;
         }
     }
 
@@ -405,28 +465,44 @@ class Mouse {
     }
 
     void FindGoalLength() { //T4
+        int step = 1;
+        int shortest_path = 10000;
+        RecordMap shortest_route; // 記目前最短的路
+        RecordMap wall;
         visited_route.push(pos.x, pos.y);
-        if (in_this_maze.GetBlock(pos.x, pos.y) == 'E') {
-            in_this_maze.SetMaze(pos.x, pos.y, 'R');
-        }
+        in_this_maze.SetMaze(pos.x, pos.y, 'R');
         while (!visited_route.IsEmpty()) {
             Pos next;
-            if (Step(next)) {
+            if (Step(next, wall) && (step+1 < shortest_path || shortest_route.IsEmpty())) {
                 Walk(next);
+                step++;
                 if (Finish()) {
-                    in_this_maze.PrintVisitedRoute();
-                    cout << endl;
-                    in_this_maze.PrintReachRoute();
-                    cout << endl << "Shortest path length = " << visited_route.Length();
-                    AllReset();
-                    return;
+                    shortest_path = step;
+                    shortest_route.Copy(visited_route);
                 }
             } else {
+                wall.pop();
+                wall.push(pos.x, pos.y);
                 Back();
+                step--;
+                if (in_this_maze.GetBlock(pos.x, pos.y) != 'G') {
+                    in_this_maze.SetMaze(pos.x, pos.y, 'E');
+                }
             }
+            cout << step << next.x << next.y << endl;
+            cout << endl;
+            in_this_maze.PrintReachRoute();
         }
+        if (shortest_route.IsEmpty()) {
+            cout << step <<endl;
+            cout << endl << endl << "### There is no path to find a goal! ###";
+            return;
+        }
+        PutR(shortest_route);
         in_this_maze.PrintVisitedRoute();
-        cout << endl << endl << "### There is no path to find a goal! ###";
+        cout << endl;
+
+        in_this_maze.PrintReachRoute();
         AllReset();
     }
 
