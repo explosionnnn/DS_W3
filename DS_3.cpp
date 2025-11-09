@@ -409,7 +409,7 @@ class Mouse {
     }
 
     void PutR(RecordMap &shortest_route) {
-        cout << "aaaaaaa" << endl;
+        // cout << "aaaaaaa" << endl;
         StackNode *cu = shortest_route.GetTop();
         while (cu != nullptr) {
             in_this_maze.SetMaze(cu -> pos.x, cu -> pos.y, 'R');
@@ -481,6 +481,7 @@ class Mouse {
         int step = 1;
         int shortest_path = 10000;
         RecordMap shortest_route; // 記目前最短的路
+        Pos goal;
         int step_arr[100][100];
         for (int y = 0; y < 100; y++) {
             for (int x = 0; x < 100; x++) {
@@ -496,6 +497,8 @@ class Mouse {
                 step++;
                 step_arr[pos.y][pos.x] = step;
                 if (Finish()) {
+                    goal.x = pos.x;
+                    goal.y = pos.y; // 記下goal位置
                     shortest_path = step;
                     shortest_route.Copy(visited_route);
                 }
@@ -506,19 +509,21 @@ class Mouse {
                 Back_f();
                 step--;
             }
-        cout << "here: " << pos.x << "," << pos.y
-        << " step_arr=" << step_arr[pos.y][pos.x] << endl;
+        // cout << "here: " << pos.x << "," << pos.y
+        // << " step_arr=" << step_arr[pos.y][pos.x] << endl;
         }
         if (shortest_route.IsEmpty()) {
-            cout << step <<endl;
+            // cout << step <<endl;
+            in_this_maze.PrintVisitedRoute();
             cout << endl << endl << "### There is no path to find a goal! ###";
             return;
         }
         PutR(shortest_route);
-        cout << "The length is " << shortest_path << " block" << endl;
+        in_this_maze.SetMaze(goal.x, goal.y, 'G'); // 放回goal
         in_this_maze.PrintVisitedRoute();
         cout << endl;
         in_this_maze.PrintReachRoute();
+        cout << endl << "The length is " << shortest_path << " block" << endl;
         AllReset();
     }
 
