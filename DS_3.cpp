@@ -275,6 +275,8 @@ class Mouse {
             in_this_maze.SetMaze(pos.x, pos.y, 'R');  //走到就設為R
     }
 
+
+
     bool CanWalkTo(int nx, int ny) {
         if (nx < 0 || ny < 0) {
             return false;
@@ -318,8 +320,10 @@ class Mouse {
 
 
 
-    bool Step(Pos& next_pos, int step_arr[][100], int step) {
-    // 試四個方向
+bool Step(Pos& next_pos, int step_arr[][100], int step, int shortest_path) {
+    // 先記下現在的方向，結束要還原
+    Direction orig_dir = dir;
+
     for (int i = 0; i < 4; ++i) {
         int nx = pos.x;
         int ny = pos.y;
@@ -330,17 +334,23 @@ class Mouse {
         else if (dir == LEFT)  nx--;
         else if (dir == UP)    ny--;
 
+        // 準備走的是「下一步」，所以要用 step+1 去比
+        int next_step = step + 1;
+
         // 可以走就走
-        if (CanWalkTo(nx, ny) && step < step_arr[ny][nx]) {
+        if (CanWalkTo(nx, ny)
+            && next_step < shortest_path              // 不要比目前找到的最短還長
+            && next_step < step_arr[ny][nx]) {        // 這格目前沒有更好的走法
             next_pos = {nx, ny};
-            return true;    // 這一步成功
+            return true;    // 這一步成功（dir 保持在成功的方向）
         }
 
         // 不行走就換方向再試
         ChangeDir();
     }
 
-    // 四個方向都不能走
+    // 四個方向都不能走，把方向還原
+    dir = orig_dir;
     return false;
 }
 
@@ -360,6 +370,8 @@ class Mouse {
     }
 
         void Back_f() {
+        if (in_this_maze.GetBlock(pos.x, pos.y) == 'R')
+            in_this_maze.SetMaze(pos.x, pos.y, 'E');
         if (!visited_route.IsEmpty()) {
             visited_route.pop();
             if (!visited_route.IsEmpty()) {
@@ -503,7 +515,7 @@ class Mouse {
         visit_route.push(pos.x, pos.y);
         while (!visited_route.IsEmpty()) {
             Pos next;
-            if (Step(next) && (step+1 < shortest_path) && (step + 1 < step_arr[next.y][next.x])) {
+            if (Step(next, step_arr, step, shortest_path)) {
                 Walk(next);
                 step++;
                 step_arr[pos.y][pos.x] = step;
