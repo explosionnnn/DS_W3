@@ -591,7 +591,7 @@ class Mouse {
         RecordMap visit_route; //記拜訪過的路
         RecordMap shortest_route; // 記目前最短的路
         RecordMap goal;
-        IntMaze step_arr(100, 100); // 用來記錄每個位置的步數  
+        IntMaze step_arr(100, 100); // 用來記錄每個位置的步數
         for (int y = 0; y < 100; y++) {
             for (int x = 0; x < 100; x++) {
                 step_arr.SetMaze(x, y, 10000);
@@ -717,24 +717,34 @@ class MissionGenerator {
         void Mission2() {
             cout << endl;
             if (maze123.GetX() == 0 || maze123.GetY() == 0) {
-                cout << endl << "### Execute command 1 to load a maze! ###" << endl << endl;
+                cout << "### Execute command 1 to load a maze! ###" << endl << endl;
                 return;
             }
             stack123.Clear();
             Mouse mouse123(maze123, stack123);
-            int goal_number;
+            string goal_number;
+            int g_num;
             while (true) {
                 cout << "Number of G (goals): ";
-                if (cin >> goal_number) {
-                    if (goal_number <= 0 || goal_number > 100) {
+                cin >> goal_number;
+                try {
+                    g_num = stoi(goal_number);
+                    if (g_num < 0) {
+                        cout << endl;
+                        continue;
+                    }
+                    if (g_num > 100 || g_num == 0) {
                         cout << endl <<"### The number must be in [1,100] ###" << endl << endl;
                         continue;
                     }
                     break;
+                    cout << endl;
+                } catch(std::invalid_argument&) {       // 非數字輸入)
+                    cout << endl;
+                    continue;
                 }
-                cout << endl;
             }
-            mouse123.FindGoalRequired(goal_number);
+            mouse123.FindGoalRequired(g_num);
             cout << endl << endl;
         }
 
