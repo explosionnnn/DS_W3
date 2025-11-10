@@ -494,7 +494,7 @@ bool Step(Pos& next_pos, int step_arr[][100], int step, int shortest_path) {
         }
         PutGoal(goal.GetTop());
         in_this_maze.PrintVisitedRoute();
-        cout << endl << "The maze has " << count << " goal(s) in total" << endl;
+        cout << endl << "The maze has " << count << " goal(s) in total." << endl;
         AllReset();
     }
 
@@ -537,9 +537,9 @@ bool Step(Pos& next_pos, int step_arr[][100], int step, int shortest_path) {
         // << " step_arr=" << step_arr[pos.y][pos.x] << endl;
         }
         if (shortest_route.IsEmpty()) {
-            // cout << step <<endl;
+            PutV(visit_route);
             in_this_maze.PrintVisitedRoute();
-            cout << endl << endl << "### There is no path to find a goal! ###";
+            cout << endl << endl << "### There is no path to find a goal! ### ";
             return;
         }
         PutV(visit_route);
@@ -548,7 +548,7 @@ bool Step(Pos& next_pos, int step_arr[][100], int step, int shortest_path) {
         in_this_maze.PrintVisitedRoute();
         cout << endl;
         in_this_maze.PrintReachRoute();
-        cout << endl << "The length is " << shortest_path << " block" << endl;
+        cout << endl << "Shortest path length = " << shortest_path;
         AllReset();
     }
 
@@ -631,7 +631,7 @@ class MissionGenerator {
         void Mission2() {
             cout << endl;
             if (maze123.GetX() == 0 || maze123.GetY() == 0) {
-                cout << "### Execute command 1 to load a maze! ###" << endl;
+                cout << endl << "### Execute command 1 to load a maze! ###" << endl << endl;
                 return;
             }
             stack123.Clear();
@@ -640,6 +640,10 @@ class MissionGenerator {
             while (true) {
                 cout << "Number of G (goals): ";
                 if (cin >> goal_number) {
+                    if (goal_number <= 0 || goal_number > 100) {
+                        cout << endl <<"### The number must be in [1,100] ###" << endl << endl;
+                        continue;
+                    }
                     break;
                 }
                 cout << endl;
@@ -650,7 +654,7 @@ class MissionGenerator {
 
         void Mission3() {
             if (maze123.GetX() == 0 || maze123.GetY() == 0) {
-                cout << "### Execute command 1 to load a maze! ###" << endl;
+                cout << endl <<  "### Execute command 1 to load a maze! ###" << endl << endl;
                 return;
             }
             stack123.Clear();
@@ -696,10 +700,11 @@ class MissionGenerator {
                     Mission3();
                 } else if (mission_type == "4") {
                     Mission4();
-                } else if (mission_type == "5") {
+                } else if (mission_type == "0") {
                     return;
                 } else {
-                    cout << "Command does not exist!" << endl;
+                    cout << endl << "Command does not exist!";
+                    cout << endl << endl;;
                 }
             }
         }
