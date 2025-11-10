@@ -590,7 +590,7 @@ class Mouse {
         int shortest_path = 10000;
         RecordMap visit_route; //記拜訪過的路
         RecordMap shortest_route; // 記目前最短的路
-        Pos goal;
+        RecordMap goal;
         IntMaze step_arr(100, 100); // 用來記錄每個位置的步數  
         for (int y = 0; y < 100; y++) {
             for (int x = 0; x < 100; x++) {
@@ -608,8 +608,7 @@ class Mouse {
                 step_arr.SetMaze(pos.x, pos.y, step);
                 visit_route.push(pos.x, pos.y);
                 if (Finish()) {
-                    goal.x = pos.x;
-                    goal.y = pos.y; // 記下goal位置
+                    goal.push(pos.x, pos.y);
                     shortest_path = step;
                     shortest_route.Copy(visited_route);
                 }
@@ -631,7 +630,7 @@ class Mouse {
         }
         PutV(visit_route);
         PutR(shortest_route);
-        in_this_maze.SetMaze(goal.x, goal.y, 'G'); // 放回goal
+        PutGoal(goal.GetTop());
         in_this_maze.PrintVisitedRoute();
         cout << endl;
         in_this_maze.PrintReachRoute();
