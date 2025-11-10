@@ -139,6 +139,94 @@ class Maze {
 
 };
 
+class IntMaze {
+    private:
+        int** maze; // 注意:maze[y][x] (先取寬(縱軸)再取長(橫軸))
+        int x; //長
+        int y; //寬
+    public:
+        IntMaze(int x, int y) {
+            this->x = x;
+            this->y = y;
+            maze = new int*[y];            // y rows
+            for (int i = 0; i < y; i++) {
+                maze[i] = new int[x];      // x columns
+            }
+        }
+
+        IntMaze(const IntMaze& other) : IntMaze(other.x, other.y) { //Copy Constructor
+        for (int i = 0; i < y; i++)
+            for (int j = 0; j < x; j++)
+                maze[i][j] = other.maze[i][j];
+        }
+
+        ~IntMaze() {
+            DeleteMaze();
+        }
+
+        void DeleteMaze() {
+            for (int i = 0; i < y; i++) {
+                delete[] maze[i];
+            }
+            delete[] maze;
+            maze = nullptr;
+        }
+
+        void Initialize(int x, int y) {
+            this->x = x;
+            this->y = y;
+            maze = new int*[y];            // y rows
+            for (int i = 0; i < y; i++) {
+                maze[i] = new int[x];      // x columns
+            }
+        }
+
+        int GetX() {
+            return x;
+        }
+
+        int GetY() {
+            return y;
+        }
+
+        int GetBlock() { // 這個好像沒用到
+            return maze[y][x];
+        }
+
+        int GetBlock(int nx, int ny) {
+            return maze[ny][nx];
+        }
+
+        void SetMaze(int pos_x, int pos_y, int maze_word) {
+            if (pos_x >= 0 && pos_x < x && pos_y >= 0 && pos_y < y) {
+                maze[pos_y][pos_x] = maze_word;
+            }
+        }
+
+        void SetMazeXY(int x, int y) {
+            this -> x = x;
+            this -> y = y;
+        }
+
+        void PrintMaze() {
+            for (int i = 0; i < y; i++) {
+                for (int j = 0; j < x; j++) {
+                    cout << maze[i][j];
+                }
+                cout << endl;
+            }
+        }
+
+        void Reset(Maze &original_maze) {
+            for (int i = 0; i < y; i++) {
+                for (int j = 0; j < x; j++) {
+                    maze[i][j] = original_maze.GetBlock(j, i);
+                }
+            }
+        }
+
+};
+
 class RecordMap { // stack
     private:
         StackNode* top;
@@ -320,39 +408,39 @@ class Mouse {
 
 
 
-bool Step(Pos& next_pos, int step_arr[][100], int step, int shortest_path) {
+    bool Step(Pos& next_pos, IntMaze& step_arr, int step, int shortest_path) {
     // 先記下現在的方向，結束要還原
-    Direction orig_dir = dir;
+        Direction orig_dir = dir;
 
-    for (int i = 0; i < 4; ++i) {
-        int nx = pos.x;
-        int ny = pos.y;
+        for (int i = 0; i < 4; ++i) {
+            int nx = pos.x;
+            int ny = pos.y;
 
         // 依目前 dir 算下一格
-        if (dir == RIGHT)      nx++;
-        else if (dir == DOWN)  ny++;
-        else if (dir == LEFT)  nx--;
-        else if (dir == UP)    ny--;
+            if (dir == RIGHT)      nx++;
+            else if (dir == DOWN)  ny++;
+            else if (dir == LEFT)  nx--;
+            else if (dir == UP)    ny--;
 
         // 準備走的是「下一步」，所以要用 step+1 去比
-        int next_step = step + 1;
+            int next_step = step + 1;
 
         // 可以走就走
-        if (CanWalkTo(nx, ny)
-            && next_step < shortest_path              // 不要比目前找到的最短還長
-            && next_step < step_arr[ny][nx]) {        // 這格目前沒有更好的走法
-            next_pos = {nx, ny};
-            return true;    // 這一步成功（dir 保持在成功的方向）
-        }
+            if (CanWalkTo(nx, ny)
+                && next_step < shortest_path              // 不要比目前找到的最短還長
+                && next_step < step_arr.GetBlock(nx, ny)) {        // 這格目前沒有更好的走法
+                next_pos = {nx, ny};
+                return true;    // 這一步成功（dir 保持在成功的方向）
+            }
 
         // 不行走就換方向再試
-        ChangeDir();
-    }
+            ChangeDir();
+        }
 
     // 四個方向都不能走，把方向還原
-    dir = orig_dir;
-    return false;
-}
+        dir = orig_dir;
+        return false;
+    }
 
 
     void Back() {
@@ -369,7 +457,7 @@ bool Step(Pos& next_pos, int step_arr[][100], int step, int shortest_path) {
         }
     }
 
-        void Back_f() {
+    void Back_f() {
         if (in_this_maze.GetBlock(pos.x, pos.y) == 'R')
             in_this_maze.SetMaze(pos.x, pos.y, 'E');
         if (!visited_route.IsEmpty()) {
@@ -382,7 +470,6 @@ bool Step(Pos& next_pos, int step_arr[][100], int step, int shortest_path) {
             ChangeDir();
         }
     }
-
 
     bool Finish() {
         return (in_this_maze.GetBlock(pos.x, pos.y) == 'G');
@@ -503,14 +590,14 @@ bool Step(Pos& next_pos, int step_arr[][100], int step, int shortest_path) {
         int shortest_path = 10000;
         RecordMap visit_route; //記拜訪過的路
         RecordMap shortest_route; // 記目前最短的路
-        Pos goal;
-        int step_arr[100][100];
+        RecordMap goal;
+        IntMaze step_arr(100, 100); // 用來記錄每個位置的步數  
         for (int y = 0; y < 100; y++) {
             for (int x = 0; x < 100; x++) {
-                step_arr[y][x] = 10000;
+                step_arr.SetMaze(x, y, 10000);
             }
         }
-        step_arr[pos.y][pos.x] = 1;
+        step_arr.SetMaze(pos.x, pos.y, 1);
         visited_route.push(pos.x, pos.y);
         visit_route.push(pos.x, pos.y);
         while (!visited_route.IsEmpty()) {
@@ -518,11 +605,10 @@ bool Step(Pos& next_pos, int step_arr[][100], int step, int shortest_path) {
             if (Step(next, step_arr, step, shortest_path)) {
                 Walk(next);
                 step++;
-                step_arr[pos.y][pos.x] = step;
+                step_arr.SetMaze(pos.x, pos.y, step);
                 visit_route.push(pos.x, pos.y);
                 if (Finish()) {
-                    goal.x = pos.x;
-                    goal.y = pos.y; // 記下goal位置
+                    goal.push(pos.x, pos.y);
                     shortest_path = step;
                     shortest_route.Copy(visited_route);
                 }
@@ -544,7 +630,7 @@ bool Step(Pos& next_pos, int step_arr[][100], int step, int shortest_path) {
         }
         PutV(visit_route);
         PutR(shortest_route);
-        in_this_maze.SetMaze(goal.x, goal.y, 'G'); // 放回goal
+        PutGoal(goal.GetTop());
         in_this_maze.PrintVisitedRoute();
         cout << endl;
         in_this_maze.PrintReachRoute();
