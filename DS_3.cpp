@@ -1,6 +1,6 @@
 /*11327121 侯至謙, 11327155 黃宇謙*/
 #include<iostream>
-#include<string>
+#include<string>        
 #include <fstream>
 
 using namespace std;
