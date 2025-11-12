@@ -2,6 +2,7 @@
 #include<iostream>
 #include<string>
 #include <fstream>
+#include <limits>
 
 using namespace std;
 
@@ -615,7 +616,7 @@ class Mouse {
         RecordMap goal;
         IntMaze step_arr;
         step_arr.Initialize(in_this_maze.GetX(), in_this_maze.GetY());
-        step_arr.AllSet(10000);
+        step_arr.AllSet(std::numeric_limits<int>::max());
         step_arr.SetMaze(pos.x, pos.y, 1);
         visited_route.push(pos.x, pos.y);
         visit_route.push(pos.x, pos.y);
